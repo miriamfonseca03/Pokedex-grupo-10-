@@ -22,6 +22,7 @@ import android.text.TextWatcher
 import android.view.View
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
+import com.google.android.material.chip.Chip
 import com.skydoves.bindables.BindingActivity
 import com.skydoves.pokedex.R
 import com.skydoves.pokedex.databinding.ActivityMainBinding
@@ -34,6 +35,12 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
   @get:VisibleForTesting
   internal val viewModel: MainViewModel by viewModels()
 
+  private val pokemonTypes = listOf(
+    "fire", "water", "grass", "electric", "ice",
+    "fighting", "poison", "ground", "flying", "psychic",
+    "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy", "normal"
+  )
+
   override fun onCreate(savedInstanceState: Bundle?) {
     onTransformationStartContainer()
     super.onCreate(savedInstanceState)
@@ -41,16 +48,34 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
       adapter = PokemonAdapter()
       vm = viewModel
 
+      pokemonTypes.forEach { type ->
+        val chip = Chip(this@MainActivity)
+        chip.text = type.replaceFirstChar { it.uppercase() }
+        chip.isCheckable = true
+        chip.setOnCheckedChangeListener { _, isChecked ->
+          if (isChecked) {
+            viewModel.filterByType(type)
+          } else {
+            viewModel.filterByType("")
+          }
+        }
+        typeChipGroup.addView(chip)
+      }
+
       bottomNavigation.setOnItemSelectedListener { item ->
         when (item.itemId) {
           R.id.nav_pokedex -> {
-            searchView.visibility = View.GONE
+            searchCard.visibility = View.GONE
+            typeFilterScroll.visibility = View.GONE
             searchView.setText("")
             viewModel.searchPokemon("")
+            viewModel.filterByType("")
+            typeChipGroup.clearCheck()
             true
           }
           R.id.nav_search -> {
-            searchView.visibility = View.VISIBLE
+            searchCard.visibility = View.VISIBLE
+            typeFilterScroll.visibility = View.VISIBLE
             searchView.requestFocus()
             true
           }

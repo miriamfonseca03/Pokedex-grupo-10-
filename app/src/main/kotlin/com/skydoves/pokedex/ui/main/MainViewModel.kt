@@ -25,9 +25,15 @@ import com.skydoves.bindables.bindingProperty
 import com.skydoves.pokedex.core.model.Pokemon
 import com.skydoves.pokedex.core.repository.MainRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -46,6 +52,7 @@ class MainViewModel @Inject constructor(
 
   private val pokemonFetchingIndex: MutableStateFlow<Int> = MutableStateFlow(0)
   private val searchQuery: MutableStateFlow<String> = MutableStateFlow("")
+  private val typeFilteredNames: MutableStateFlow<List<String>> = MutableStateFlow(emptyList())
 
   private val pokemonListFlow = pokemonFetchingIndex.flatMapLatest { page ->
     mainRepository.fetchPokemonList(
@@ -56,10 +63,15 @@ class MainViewModel @Inject constructor(
     )
   }
 
-  private val filteredPokemonListFlow = pokemonListFlow.combine(searchQuery) { list, query ->
-    if (query.isEmpty()) list
-    else list.filter { it.name.contains(query, ignoreCase = true) }
-  }
+  private val filteredPokemonListFlow = pokemonListFlow
+    .combine(searchQuery) { list, query ->
+      if (query.isEmpty()) list
+      else list.filter { it.name.contains(query, ignoreCase = true) }
+    }
+    .combine(typeFilteredNames) { list, typeNames ->
+      if (typeNames.isEmpty()) list
+      else list.filter { typeNames.contains(it.name) }
+    }
 
   @get:Bindable
   val pokemonList: List<Pokemon> by filteredPokemonListFlow.asBindingProperty(viewModelScope, emptyList())
@@ -77,5 +89,36 @@ class MainViewModel @Inject constructor(
 
   fun searchPokemon(query: String) {
     searchQuery.value = query
+  }
+
+  fun filterByType(type: String) {
+    if (type.isEmpty()) {
+      typeFilteredNames.value = emptyList()
+      return
+    }
+    viewModelScope.launch {
+      try {
+        val names = withContext(Dispatchers.IO) {
+          val client = OkHttpClient()
+          val request = Request.Builder()
+            .url("https://pokeapi.co/api/v2/type/$type")
+            .build()
+          val response = client.newCall(request).execute()
+          val body = response.body?.string() ?: return@withContext emptyList()
+          val json = JSONObject(body)
+          val pokemonArray = json.getJSONArray("pokemon")
+          val nameList = mutableListOf<String>()
+          for (i in 0 until pokemonArray.length()) {
+            val slot = pokemonArray.getJSONObject(i)
+            val name = slot.getJSONObject("pokemon").getString("name")
+            nameList.add(name)
+          }
+          nameList
+        }
+        typeFilteredNames.value = names
+      } catch (e: Exception) {
+        toastMessage = "Erro ao filtrar por tipo"
+      }
+    }
   }
 }
