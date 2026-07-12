@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @VisibleForTesting
@@ -71,4 +72,9 @@ class MainRepositoryImpl @Inject constructor(
     // Emite um Flow reativo que observa todas as mudanças na tabela para a página atual
     emitAll(pokemonDao.getAllPokemonListFlow(page).map { it.asDomain() })
   }.onStart { onStart() }.flowOn(ioDispatcher)
+
+  @WorkerThread
+  override suspend fun updateFavorite(name: String, isFavorite: Boolean) = withContext(ioDispatcher) {
+    pokemonDao.updateFavorite(name, isFavorite)
+  }
 }
