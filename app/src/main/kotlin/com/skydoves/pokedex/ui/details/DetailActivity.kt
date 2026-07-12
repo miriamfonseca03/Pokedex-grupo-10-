@@ -47,8 +47,13 @@ class DetailActivity : BindingActivity<ActivityDetailBinding>(R.layout.activity_
   override fun onCreate(savedInstanceState: Bundle?) {
     onTransformationEndContainerApplyParams(this)
     super.onCreate(savedInstanceState)
-    binding.pokemon = pokemon
-    binding.vm = viewModel
+    binding {
+      pokemon = this@DetailActivity.pokemon
+      vm = viewModel
+      favorite.setOnCheckedChangeListener { _, isChecked ->
+        viewModel.toggleFavorite(isChecked)
+      }
+    }
   }
 
   companion object {

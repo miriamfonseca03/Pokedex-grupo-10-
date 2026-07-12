@@ -28,10 +28,11 @@ import com.skydoves.pokedex.core.repository.DetailRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class DetailViewModel @AssistedInject constructor(
-  detailRepository: DetailRepository,
+  private val detailRepository: DetailRepository,
   @Assisted private val pokemonName: String,
 ) : BindingViewModel() {
 
@@ -54,6 +55,12 @@ class DetailViewModel @AssistedInject constructor(
 
   init {
     Timber.d("init DetailViewModel")
+  }
+
+  fun toggleFavorite(isFavorite: Boolean) {
+    viewModelScope.launch {
+      detailRepository.updateFavorite(pokemonName, isFavorite)
+    }
   }
 
   @dagger.assisted.AssistedFactory

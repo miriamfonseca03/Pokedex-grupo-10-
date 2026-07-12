@@ -35,6 +35,9 @@ interface PokemonDao {
   @Query("SELECT * FROM PokemonEntity WHERE page <= :page_")
   suspend fun getAllPokemonList(page_: Int): List<PokemonEntity>
 
+  @Query("SELECT * FROM PokemonEntity WHERE page <= :page_")
+  fun getAllPokemonListFlow(page_: Int): Flow<List<PokemonEntity>>
+
   @Query("UPDATE PokemonEntity SET isFavorite = :isFavorite WHERE name = :name")
   suspend fun updateFavorite(name: String, isFavorite: Boolean)
 

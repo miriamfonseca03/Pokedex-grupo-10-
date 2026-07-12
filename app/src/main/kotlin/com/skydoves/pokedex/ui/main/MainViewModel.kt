@@ -53,6 +53,7 @@ class MainViewModel @Inject constructor(
   private val pokemonFetchingIndex: MutableStateFlow<Int> = MutableStateFlow(0)
   private val searchQuery: MutableStateFlow<String> = MutableStateFlow("")
   private val typeFilteredNames: MutableStateFlow<List<String>> = MutableStateFlow(emptyList())
+  private val isFavoriteFilter: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   private val pokemonListFlow = pokemonFetchingIndex.flatMapLatest { page ->
     mainRepository.fetchPokemonList(
@@ -72,6 +73,10 @@ class MainViewModel @Inject constructor(
       if (typeNames.isEmpty()) list
       else list.filter { typeNames.contains(it.name) }
     }
+    .combine(isFavoriteFilter) { list, favoritesOnly ->
+      if (favoritesOnly) list.filter { it.isFavorite }
+      else list
+    }
 
   @get:Bindable
   val pokemonList: List<Pokemon> by filteredPokemonListFlow.asBindingProperty(viewModelScope, emptyList())
@@ -82,9 +87,13 @@ class MainViewModel @Inject constructor(
 
   @MainThread
   fun fetchNextPokemonList() {
-    if (!isLoading) {
+    if (!isLoading && !isFavoriteFilter.value) {
       pokemonFetchingIndex.value++
     }
+  }
+
+  fun toggleFavoriteFilter(favoritesOnly: Boolean) {
+    isFavoriteFilter.value = favoritesOnly
   }
 
   fun searchPokemon(query: String) {

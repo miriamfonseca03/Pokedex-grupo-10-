@@ -70,13 +70,21 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
             searchView.setText("")
             viewModel.searchPokemon("")
             viewModel.filterByType("")
+            viewModel.toggleFavoriteFilter(false)
             typeChipGroup.clearCheck()
             true
           }
           R.id.nav_search -> {
             searchCard.visibility = View.VISIBLE
             typeFilterScroll.visibility = View.VISIBLE
+            viewModel.toggleFavoriteFilter(false)
             searchView.requestFocus()
+            true
+          }
+          R.id.nav_favorites -> {
+            searchCard.visibility = View.GONE
+            typeFilterScroll.visibility = View.GONE
+            viewModel.toggleFavoriteFilter(true)
             true
           }
           else -> false

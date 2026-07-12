@@ -28,6 +28,7 @@ data class Pokemon(
   @field:Json(name = "name")
   val name: String,
   @field:Json(name = "url") val url: String,
+  var isFavorite: Boolean = false,
 ) : Parcelable {
 
   fun getImageUrl(): String {

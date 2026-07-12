@@ -27,6 +27,7 @@ object PokemonEntityMapper : EntityMapper<List<Pokemon>, List<PokemonEntity>> {
         page = pokemon.page,
         name = pokemon.name,
         url = pokemon.url,
+        isFavorite = pokemon.isFavorite,
       )
     }
   }
@@ -37,6 +38,7 @@ object PokemonEntityMapper : EntityMapper<List<Pokemon>, List<PokemonEntity>> {
         page = pokemonEntity.page,
         name = pokemonEntity.name,
         url = pokemonEntity.url,
+        isFavorite = pokemonEntity.isFavorite,
       )
     }
   }

@@ -30,8 +30,11 @@ import com.skydoves.sandwich.message
 import com.skydoves.sandwich.onFailure
 import com.skydoves.sandwich.suspendOnSuccess
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
@@ -49,24 +52,23 @@ class MainRepositoryImpl @Inject constructor(
     onStart: () -> Unit,
     onComplete: () -> Unit,
     onError: (String?) -> Unit,
-  ) = flow {
-    var pokemons = pokemonDao.getPokemonList(page).asDomain()
+  ): Flow<List<Pokemon>> = flow {
+    val pokemons = pokemonDao.getPokemonList(page)
     if (pokemons.isEmpty()) {
-      /**
-       * fetches a list of [Pokemon] from the network and getting [ApiResponse] asynchronously.
-       * @see [suspendOnSuccess](https://github.com/skydoves/sandwich#apiresponse-extensions-for-coroutines)
-       */
       val response = pokedexClient.fetchPokemonList(page = page)
       response.suspendOnSuccess {
-        pokemons = data.results
-        pokemons.forEach { pokemon -> pokemon.page = page }
-        pokemonDao.insertPokemonList(pokemons.asEntity())
-        emit(pokemonDao.getAllPokemonList(page).asDomain())
-      }.onFailure { // handles the all error cases from the API request fails.
+        val results = data.results
+        results.forEach { pokemon -> pokemon.page = page }
+        pokemonDao.insertPokemonList(results.asEntity())
+      }.onFailure {
         onError(message())
       }
-    } else {
-      emit(pokemonDao.getAllPokemonList(page).asDomain())
     }
-  }.onStart { onStart() }.onCompletion { onComplete() }.flowOn(ioDispatcher)
+    // Chamamos onComplete() aqui porque a carga inicial (seja de rede ou cache) terminou.
+    // Isso permite que a UI esconda o ProgressBar enquanto continuamos a observar mudanças.
+    onComplete()
+    
+    // Emite um Flow reativo que observa todas as mudanças na tabela para a página atual
+    emitAll(pokemonDao.getAllPokemonListFlow(page).map { it.asDomain() })
+  }.onStart { onStart() }.flowOn(ioDispatcher)
 }

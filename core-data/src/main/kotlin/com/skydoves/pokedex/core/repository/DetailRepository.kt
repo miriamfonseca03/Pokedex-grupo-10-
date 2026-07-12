@@ -28,4 +28,7 @@ interface DetailRepository {
     onComplete: () -> Unit,
     onError: (String?) -> Unit,
   ): Flow<PokemonInfo>
+
+  @WorkerThread
+  suspend fun updateFavorite(name: String, isFavorite: Boolean)
 }
