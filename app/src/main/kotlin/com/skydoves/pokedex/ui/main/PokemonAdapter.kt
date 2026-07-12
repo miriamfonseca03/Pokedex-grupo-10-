@@ -28,12 +28,17 @@ import com.skydoves.pokedex.core.model.Pokemon
 import com.skydoves.pokedex.databinding.ItemPokemonBinding
 import com.skydoves.pokedex.ui.details.DetailActivity
 
-class PokemonAdapter : BindingListAdapter<Pokemon, PokemonAdapter.PokemonViewHolder>(diffUtil) {
+class PokemonAdapter(
+  private val viewModel: MainViewModel,
+) : BindingListAdapter<Pokemon, PokemonAdapter.PokemonViewHolder>(diffUtil) {
 
   private var onClickedAt = 0L
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PokemonViewHolder =
-    parent.binding<ItemPokemonBinding>(R.layout.item_pokemon).let(::PokemonViewHolder)
+    parent.binding<ItemPokemonBinding>(R.layout.item_pokemon).let {
+      it.vm = viewModel
+      PokemonViewHolder(it)
+    }
 
   override fun onBindViewHolder(holder: PokemonViewHolder, position: Int) =
     holder.bindPokemon(getItem(position))
@@ -51,6 +56,12 @@ class PokemonAdapter : BindingListAdapter<Pokemon, PokemonAdapter.PokemonViewHol
           DetailActivity.startActivity(binding.transformationLayout, getItem(position))
           onClickedAt = currentClickedAt
         }
+      }
+
+      binding.favoriteIndicator.setOnClickListener {
+        val position = bindingAdapterPosition.takeIf { it != NO_POSITION }
+          ?: return@setOnClickListener
+        binding.vm?.toggleFavorite(getItem(position))
       }
     }
 

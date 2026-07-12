@@ -81,19 +81,30 @@ class MainViewModel @Inject constructor(
   @get:Bindable
   val pokemonList: List<Pokemon> by filteredPokemonListFlow.asBindingProperty(viewModelScope, emptyList())
 
+  @get:Bindable
+  var isFavoriteFilterEnabled: Boolean by bindingProperty(false)
+    private set
+
   init {
     Timber.d("init MainViewModel")
   }
 
   @MainThread
   fun fetchNextPokemonList() {
-    if (!isLoading && !isFavoriteFilter.value) {
+    if (!isLoading && !isFavoriteFilterEnabled) {
       pokemonFetchingIndex.value++
     }
   }
 
   fun toggleFavoriteFilter(favoritesOnly: Boolean) {
+    isFavoriteFilterEnabled = favoritesOnly
     isFavoriteFilter.value = favoritesOnly
+  }
+
+  fun toggleFavorite(pokemon: Pokemon) {
+    viewModelScope.launch {
+      mainRepository.updateFavorite(pokemon.name, !pokemon.isFavorite)
+    }
   }
 
   fun searchPokemon(query: String) {

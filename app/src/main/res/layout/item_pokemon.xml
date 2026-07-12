@@ -24,6 +24,10 @@
       name="pokemon"
       type="com.skydoves.pokedex.core.model.Pokemon" />
 
+    <variable
+      name="vm"
+      type="com.skydoves.pokedex.ui.main.MainViewModel" />
+
   </data>
 
   <com.skydoves.transformationlayout.TransformationLayout
@@ -60,11 +64,11 @@
 
         <ImageView
           android:id="@+id/favorite_indicator"
-          android:layout_width="16dp"
-          android:layout_height="16dp"
+          android:layout_width="24dp"
+          android:layout_height="24dp"
           android:layout_margin="8dp"
-          android:src="@android:drawable/btn_star_big_on"
-          app:gone="@{!pokemon.isFavorite}"
+          android:padding="4dp"
+          android:src="@{pokemon.isFavorite ? @android:drawable/btn_star_big_on : @android:drawable/btn_star_big_off}"
           app:layout_constraintStart_toStartOf="parent"
           app:layout_constraintTop_toTopOf="parent" />
 
