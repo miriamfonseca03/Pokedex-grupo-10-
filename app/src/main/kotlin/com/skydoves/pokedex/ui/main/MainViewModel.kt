@@ -137,7 +137,6 @@ class MainViewModel @Inject constructor(
         }
         typeFilteredNames.value = names
       } catch (e: Exception) {
-        Timber.e(e, "Erro ao filtrar por tipo")
         toastMessage = "Erro ao filtrar por tipo"
       }
     }
