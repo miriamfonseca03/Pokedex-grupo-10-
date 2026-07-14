@@ -27,4 +27,119 @@ import com.skydoves.pokedex.core.repository.MainRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import timber.log.Timber
+import javax.inject.Inject
+
+@HiltViewModel
+class MainViewModel @Inject constructor(
+  private val mainRepository: MainRepository,
+) : BindingViewModel() {
+
+  @get:Bindable
+  var isLoading: Boolean by bindingProperty(false)
+    private set
+
+  @get:Bindable
+  var toastMessage: String? by bindingProperty(null)
+    private set
+
+  private val pokemonFetchingIndex: MutableStateFlow<Int> = MutableStateFlow(0)
+  private val searchQuery: MutableStateFlow<String> = MutableStateFlow("")
+  private val typeFilteredNames: MutableStateFlow<List<String>> = MutableStateFlow(emptyList())
+  private val isFavoriteFilter: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+  private val pokemonListFlow = pokemonFetchingIndex.flatMapLatest { page ->
+    mainRepository.fetchPokemonList(
+      page = page,
+      onStart = { isLoading = true },
+      onComplete = { isLoading = false },
+      onError = { toastMessage = it },
+    )
+  }
+
+  private val filteredPokemonListFlow = pokemonListFlow
+    .combine(searchQuery) { list, query ->
+      if (query.isEmpty()) list
+      else list.filter { it.name.contains(query, ignoreCase = true) }
+    }
+    .combine(typeFilteredNames) { list, typeNames ->
+      if (typeNames.isEmpty()) list
+      else list.filter { typeNames.contains(it.name) }
+    }
+    .combine(isFavoriteFilter) { list, favoritesOnly ->
+      if (favoritesOnly) list.filter { it.isFavorite }
+      else list
+    }
+
+  @get:Bindable
+  val pokemonList: List<Pokemon> by filteredPokemonListFlow.asBindingProperty(viewModelScope, emptyList())
+
+  @get:Bindable
+  var isFavoriteFilterEnabled: Boolean by bindingProperty(false)
+    private set
+
+  init {
+    Timber.d("init MainViewModel")
+  }
+
+  @MainThread
+  fun fetchNextPokemonList() {
+    if (!isLoading && !isFavoriteFilterEnabled) {
+      pokemonFetchingIndex.value++
+    }
+  }
+
+  fun toggleFavoriteFilter(favoritesOnly: Boolean) {
+    isFavoriteFilterEnabled = favoritesOnly
+    isFavoriteFilter.value = favoritesOnly
+  }
+
+  fun toggleFavorite(pokemon: Pokemon) {
+    viewModelScope.launch {
+      mainRepository.updateFavorite(pokemon.name, !pokemon.isFavorite)
+    }
+  }
+
+  fun searchPokemon(query: String) {
+    searchQuery.value = query
+  }
+
+  fun filterByType(type: String) {
+    if (type.isEmpty()) {
+      typeFilteredNames.value = emptyList()
+      return
+    }
+    viewModelScope.launch {
+      try {
+        val names = withContext(Dispatchers.IO) {
+          val client = OkHttpClient()
+          val request = Request.Builder()
+            .url("https://pokeapi.co/api/v2/type/$type")
+            .build()
+          val response = client.newCall(request).execute()
+          val body = response.body?.string() ?: return@withContext emptyList()
+          val json = JSONObject(body)
+          val pokemonArray = json.getJSONArray("pokemon")
+          val nameList = mutableListOf<String>()
+          for (i in 0 until pokemonArray.length()) {
+            val slot = pokemonArray.getJSONObject(i)
+            val name = slot.getJSONObject("pokemon").getString("name")
+            nameList.add(name)
+          }
+          nameList
+        }
+        typeFilteredNames.value = names
+      } catch (e: Exception) {
+        Timber.e(e, "Erro ao filtrar por tipo")
+        toastMessage = "Erro ao filtrar por tipo"
+      }
+    }
+  }
+}
