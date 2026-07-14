@@ -48,6 +48,7 @@ class PokemonAdapter(
   ) : RecyclerView.ViewHolder(binding.root) {
 
     init {
+      // Abre o ecrã de detalhes ao clicar no cartão.
       binding.root.setOnClickListener {
         val position = bindingAdapterPosition.takeIf { it != NO_POSITION }
           ?: return@setOnClickListener
@@ -58,6 +59,9 @@ class PokemonAdapter(
         }
       }
 
+
+      // Permite favoritar diretamente da lista através do ícone da estrela.
+      //binding.vm é o MainViewModel passado pelo DataBinding.
       binding.favoriteIndicator.setOnClickListener {
         val position = bindingAdapterPosition.takeIf { it != NO_POSITION }
           ?: return@setOnClickListener

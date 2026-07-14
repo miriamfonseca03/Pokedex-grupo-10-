@@ -65,14 +65,23 @@ class MainRepositoryImpl @Inject constructor(
         onError(message())
       }
     }
-    // Chamamos onComplete() aqui porque a carga inicial (seja de rede ou cache) terminou.
-    // Isso permite que a UI esconda o ProgressBar enquanto continuamos a observar mudanças.
+    
+    // Notifica a UI que a carga inicial de dados terminou para esconder o ProgressBar.
     onComplete()
     
-    // Emite um Flow reativo que observa todas as mudanças na tabela para a página atual
+    // emitAll estabelece uma ponte reativa com a base de dados.
+    // Sempre que a tabela PokemonEntity mudar (ex: marcar favorito), este Flow emite a lista atualizada automaticamente.
     emitAll(pokemonDao.getAllPokemonListFlow(page).map { it.asDomain() })
   }.onStart { onStart() }.flowOn(ioDispatcher)
 
+  @WorkerThread
+  override fun fetchFavoritePokemonList(): Flow<List<Pokemon>> =
+    pokemonDao.getFavoritePokemons().map { it.asDomain() }.flowOn(ioDispatcher)
+
+  /**
+   * Atualiza o estado de favorito de um Pokémon na base de dados local.
+   * Esta operação é executada na IO thread para não bloquear a interface.
+   */
   @WorkerThread
   override suspend fun updateFavorite(name: String, isFavorite: Boolean) = withContext(ioDispatcher) {
     pokemonDao.updateFavorite(name, isFavorite)

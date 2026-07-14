@@ -57,6 +57,10 @@ class DetailViewModel @AssistedInject constructor(
     Timber.d("init DetailViewModel")
   }
 
+  /**
+   * Atualiza o estado de favorito do Pokémon atual.
+   * Chamado quando o utilizador clica na estrela no ecrã de detalhes.
+   */
   fun toggleFavorite(isFavorite: Boolean) {
     viewModelScope.launch {
       detailRepository.updateFavorite(pokemonName, isFavorite)

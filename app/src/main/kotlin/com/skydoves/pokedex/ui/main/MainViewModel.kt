@@ -53,17 +53,27 @@ class MainViewModel @Inject constructor(
   private val pokemonFetchingIndex: MutableStateFlow<Int> = MutableStateFlow(0)
   private val searchQuery: MutableStateFlow<String> = MutableStateFlow("")
   private val typeFilteredNames: MutableStateFlow<List<String>> = MutableStateFlow(emptyList())
+  
+  // StateFlow que controla se o ecrã deve mostrar apenas os favoritos ou a lista normal.
   private val isFavoriteFilter: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-  private val pokemonListFlow = pokemonFetchingIndex.flatMapLatest { page ->
-    mainRepository.fetchPokemonList(
-      page = page,
-      onStart = { isLoading = true },
-      onComplete = { isLoading = false },
-      onError = { toastMessage = it },
-    )
+  private val pokemonListFlow = combine(pokemonFetchingIndex, isFavoriteFilter) { page, favoritesOnly ->
+    page to favoritesOnly
+  }.flatMapLatest { (page, favoritesOnly) ->
+    if (favoritesOnly) {
+      mainRepository.fetchFavoritePokemonList()
+    } else {
+      mainRepository.fetchPokemonList(
+        page = page,
+        onStart = { isLoading = true },
+        onComplete = { isLoading = false },
+        onError = { toastMessage = it },
+      )
+    }
   }
 
+  // Lógica de filtragem combinada: aplica busca por nome e filtro por tipo.
+  // O filtro de favoritos agora é gerido diretamente pela fonte de dados (Repository/DAO).
   private val filteredPokemonListFlow = pokemonListFlow
     .combine(searchQuery) { list, query ->
       if (query.isEmpty()) list
@@ -73,14 +83,13 @@ class MainViewModel @Inject constructor(
       if (typeNames.isEmpty()) list
       else list.filter { typeNames.contains(it.name) }
     }
-    .combine(isFavoriteFilter) { list, favoritesOnly ->
-      if (favoritesOnly) list.filter { it.isFavorite }
-      else list
-    }
 
   @get:Bindable
   val pokemonList: List<Pokemon> by filteredPokemonListFlow.asBindingProperty(viewModelScope, emptyList())
 
+  /**
+   * Propriedade observável pelo DataBinding para exibir a mensagem "No favorites yet".
+   */
   @get:Bindable
   var isFavoriteFilterEnabled: Boolean by bindingProperty(false)
     private set
@@ -91,16 +100,23 @@ class MainViewModel @Inject constructor(
 
   @MainThread
   fun fetchNextPokemonList() {
+    // Evita carregar novas páginas da API se estivermos a visualizar apenas os favoritos.
     if (!isLoading && !isFavoriteFilterEnabled) {
       pokemonFetchingIndex.value++
     }
   }
 
+  /**
+   * Alterna o estado do filtro de favoritos e notifica a UI através do DataBinding.
+   */
   fun toggleFavoriteFilter(favoritesOnly: Boolean) {
     isFavoriteFilterEnabled = favoritesOnly
     isFavoriteFilter.value = favoritesOnly
   }
 
+  /**
+   * Executa a inversão do estado de favorito de um Pokémon através do repositório.
+   */
   fun toggleFavorite(pokemon: Pokemon) {
     viewModelScope.launch {
       mainRepository.updateFavorite(pokemon.name, !pokemon.isFavorite)
