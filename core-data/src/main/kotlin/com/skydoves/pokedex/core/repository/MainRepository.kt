@@ -31,5 +31,8 @@ interface MainRepository {
   ): Flow<List<Pokemon>>
 
   @WorkerThread
+  fun fetchFavoritePokemonList(): Flow<List<Pokemon>>
+
+  @WorkerThread
   suspend fun updateFavorite(name: String, isFavorite: Boolean)
 }
