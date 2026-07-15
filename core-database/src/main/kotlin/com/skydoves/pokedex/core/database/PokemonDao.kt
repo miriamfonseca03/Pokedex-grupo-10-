@@ -38,9 +38,14 @@ interface PokemonDao {
   @Query("SELECT * FROM PokemonEntity WHERE page <= :page_")
   fun getAllPokemonListFlow(page_: Int): Flow<List<PokemonEntity>>
 
+  // Nova função que atualiza o estado de favorito de um Pokémon específico.
+  // Recebe o nome do Pokémon e o novo valor (true ou false) e faz um UPDATE na base de dados.
   @Query("UPDATE PokemonEntity SET isFavorite = :isFavorite WHERE name = :name")
   suspend fun updateFavorite(name: String, isFavorite: Boolean)
 
+  // Nova função que devolve apenas os Pokémon marcados como favoritos.
+  // Devolve um Flow em vez de uma lista simples, para que o ecrã que a observa
+  // se atualize automaticamente sempre que a lista de favoritos mudar.
   @Query("SELECT * FROM PokemonEntity WHERE isFavorite = 1")
   fun getFavoritePokemons(): Flow<List<PokemonEntity>>
 }

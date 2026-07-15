@@ -24,5 +24,9 @@ data class PokemonEntity(
   var page: Int = 0,
   @PrimaryKey val name: String,
   val url: String,
+
+  // Novo campo isFavorite que indica se o Pokémon está marcado como favorito ou não.
+  // É "var" porque o valor pode mudar ao ser marcado/desmarcado como favorito.
+  // Começa como "false" porque nenhum Pokémon é favorito por defeito.
   var isFavorite: Boolean = false,
 )
