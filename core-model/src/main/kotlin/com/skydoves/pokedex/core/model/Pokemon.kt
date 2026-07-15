@@ -37,6 +37,8 @@ data class Pokemon(
       "pokemon/other/official-artwork/$index.png"
   }
 
+  // Extrai o número oficial do Pokémon a partir do URL da API,
+  // em vez de usar o número da página de paginação.
   fun getIndex(): String {
     val index = url.split("/".toRegex()).dropLast(1).last()
     return String.format("#%03d", index.toInt())

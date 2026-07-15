@@ -35,6 +35,7 @@
     android:background="@color/background"
     android:clipToPadding="false">
 
+    <!-- Header com ícone e título, substitui a toolbar vermelha original -->
     <LinearLayout
       android:id="@+id/header"
       android:layout_width="match_parent"
@@ -64,6 +65,7 @@
 
     </LinearLayout>
 
+    <!-- Barra de pesquisa, começa escondida e aparece ao selecionar "Pesquisar" no menu -->
     <com.google.android.material.card.MaterialCardView
       android:id="@+id/searchCard"
       android:layout_width="0dp"
@@ -95,6 +97,7 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Filtro por tipo: chips preenchidos dinamicamente no MainActivity -->
     <HorizontalScrollView
       android:id="@+id/typeFilterScroll"
       android:layout_width="0dp"
@@ -116,6 +119,7 @@
 
     </HorizontalScrollView>
 
+    <!-- Grelha de 3 colunas (antes eram 2), lista ligada diretamente ao ViewModel -->
     <androidx.recyclerview.widget.RecyclerView
       android:id="@+id/recyclerView"
       android:layout_width="match_parent"
@@ -164,6 +168,7 @@
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Menu de navegação inferior, com os 3 destinos: Pokédex, Pesquisar, Favoritos -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
       android:id="@+id/bottomNavigation"
       android:layout_width="0dp"

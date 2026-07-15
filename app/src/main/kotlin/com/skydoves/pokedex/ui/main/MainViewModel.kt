@@ -51,8 +51,13 @@ class MainViewModel @Inject constructor(
     private set
 
   private val pokemonFetchingIndex: MutableStateFlow<Int> = MutableStateFlow(0)
+
+  // Estado da barra de pesquisa
   private val searchQuery: MutableStateFlow<String> = MutableStateFlow("")
+
+  // Nomes devolvidos pela PokeAPI para o tipo selecionado
   private val typeFilteredNames: MutableStateFlow<List<String>> = MutableStateFlow(emptyList())
+
   private val isFavoriteFilter: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   private val pokemonListFlow = pokemonFetchingIndex.flatMapLatest { page ->
@@ -64,6 +69,9 @@ class MainViewModel @Inject constructor(
     )
   }
 
+  // Lista final: combina pesquisa por nome, filtro por tipo e filtro de favoritos.
+  // Cada combine reage automaticamente sempre que o valor correspondente muda,
+  // sem necessidade de recalcular ou sincronizar manualmente.
   private val filteredPokemonListFlow = pokemonListFlow
     .combine(searchQuery) { list, query ->
       if (query.isEmpty()) list
@@ -107,10 +115,13 @@ class MainViewModel @Inject constructor(
     }
   }
 
+  // Atualiza o texto de pesquisa a cada letra escrita
   fun searchPokemon(query: String) {
     searchQuery.value = query
   }
 
+  // Pesquisa os Pokémon de um tipo na PokeAPI e atualiza o filtro.
+  // Corre em Dispatchers.IO porque é uma chamada de rede síncrona.
   fun filterByType(type: String) {
     if (type.isEmpty()) {
       typeFilteredNames.value = emptyList()
@@ -137,6 +148,7 @@ class MainViewModel @Inject constructor(
         }
         typeFilteredNames.value = names
       } catch (e: Exception) {
+        Timber.e(e, "Erro ao filtrar por tipo")
         toastMessage = "Erro ao filtrar por tipo"
       }
     }

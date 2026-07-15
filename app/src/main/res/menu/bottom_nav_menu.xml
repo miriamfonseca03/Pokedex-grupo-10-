@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Menu de navegação inferior com os 3 destinos da app -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
   <item

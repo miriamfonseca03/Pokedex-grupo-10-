@@ -221,6 +221,7 @@ object ViewBinding {
     }
   }
 
+  // Binding adapter que aplica o efeito de silhueta branca às imagens dos Pokémon
   @JvmStatic
   @BindingAdapter("silhouetteImage")
   fun bindSilhouetteImage(view: AppCompatImageView, url: String?) {
@@ -228,6 +229,7 @@ object ViewBinding {
       Glide.with(view.context)
         .load(it)
         .into(view)
+      // Pinta a imagem toda de branco
       view.setColorFilter(android.graphics.Color.WHITE)
     }
   }

@@ -50,6 +50,7 @@
         android:layout_height="wrap_content"
         android:foreground="?attr/selectableItemBackground">
 
+        <!-- Número oficial, obtido via pokemon.index (getIndex) -->
         <androidx.appcompat.widget.AppCompatTextView
           android:id="@+id/number"
           android:layout_width="wrap_content"
@@ -72,6 +73,7 @@
           app:layout_constraintStart_toStartOf="parent"
           app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Imagem com efeito de silhueta (app:silhouetteImage) -->
         <androidx.appcompat.widget.AppCompatImageView
           android:id="@+id/image"
           android:layout_width="100dp"
