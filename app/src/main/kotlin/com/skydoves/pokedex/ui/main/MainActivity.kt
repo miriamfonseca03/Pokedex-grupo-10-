@@ -1,19 +1,3 @@
-/*
- * Designed and developed by 2022 skydoves (Jaewoong Eum)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.skydoves.pokedex.ui.main
 
 import android.os.Bundle
@@ -35,6 +19,7 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
   @get:VisibleForTesting
   internal val viewModel: MainViewModel by viewModels()
 
+  // Tipos disponíveis para o filtro, usados para gerar os chips dinamicamente
   private val pokemonTypes = listOf(
     "fire", "water", "grass", "electric", "ice",
     "fighting", "poison", "ground", "flying", "psychic",
@@ -48,6 +33,7 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
       adapter = PokemonAdapter(viewModel)
       vm = viewModel
 
+      // Cria um chip por tipo e liga-o ao filtro no ViewModel
       pokemonTypes.forEach { type ->
         val chip = Chip(this@MainActivity)
         chip.text = type.replaceFirstChar { it.uppercase() }
@@ -62,6 +48,7 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
         typeChipGroup.addView(chip)
       }
 
+      // Navegação inferior: Pokédex (estado inicial), Pesquisar, Favoritos (Daniel)
       bottomNavigation.setOnItemSelectedListener { item ->
         when (item.itemId) {
           R.id.nav_pokedex -> {
@@ -91,6 +78,7 @@ class MainActivity : BindingActivity<ActivityMainBinding>(R.layout.activity_main
         }
       }
 
+      // Atualiza a pesquisa a cada letra escrita
       searchView.addTextChangedListener(object : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
